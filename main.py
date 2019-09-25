@@ -23,14 +23,16 @@ class Display:
     moving_ball_rects: [Ball] = []
     drawn_balls: [Ball] = []
 
-    def __init__(self, game):
+    def __init__(self, game, controller):
+
         pygame.init()
         pygame.font.init()  # you have to call this at the start,
         # if you want to use this module.
         self.font = pygame.font.SysFont('Times New Roman', self.text_size)
 
         self.game: ConnectGame = game
-
+        # Change this to just assign to display
+        self.controller = controller
         # grid = Grid()
 
         self.size = self.width, self.height = 800, 600
@@ -45,17 +47,20 @@ class Display:
         self.box_width = self.board_width / self.game.get_grid().get_width()
         self.box_height = self.board_height / self.game.get_grid().get_height()
 
-        self.draw()
+        self.draw_loop()
 
     def highlight_col(self, num):
         pygame.draw.rect(self.screen, Colors.col_highlight,
                          (num * self.box_width, 0, self.box_width, self.board_height))
 
+    def to_animate(self):
+        return len(self.moving_ball_rects) > 0
+
     # ball_rect: pygame.Rect = (0, 0, 0, 0)
 
     def animate_drop(self):
         for index, ball_rect in enumerate(self.moving_ball_rects):
-            speed = [0, 10]
+            speed = [0, 100]
             ball_rect.rect = ball_rect.rect.move(speed)
             pygame.draw.ellipse(self.screen, ball_rect.color, ball_rect.rect)
             if ball_rect.rect[1] > (ball_rect.y * self.box_height):
@@ -140,9 +145,13 @@ class Display:
                 pygame.draw.ellipse(self.screen,
                                     Colors.white
                                     , self.get_box(x, y))
-                # pygame.draw.ellipse(self.screen,
-                #                     Colours.get_tile_color(grid.get(x, y))
-                #                     , self.get_box(x, y))
+
+    def draw_grid(self):
+        for x in range(self.game.get_grid().get_width()):
+            for y in range(self.game.get_grid().get_height()):
+                pygame.draw.ellipse(self.screen,
+                                    Colors.get_tile_color(self.game.grid.get(x, y))
+                                    , self.get_box(x, y))
 
     def draw_balls(self):
         for ball in self.drawn_balls:
@@ -151,21 +160,68 @@ class Display:
                                 Colors.get_tile_color(self.game.get_grid().get(ball.x, ball.y))
                                 , self.get_box(ball.x, ball.y))
 
-    def draw(self):
+    def draw_loop(self):
         self.screen.fill(Colors.blue)
-        if self.game.controller.selected != -1:
-            self.highlight_col(self.game.controller.selected)
-
+        if self.controller.selected != -1:
+            self.highlight_col(self.controller.selected)
         self.draw_board()
-        self.draw_info_screen()
         self.animate_drop()
+        self.draw_info_screen()
         self.draw_balls()
         self.draw_game_status()
+
+    def faster_draw(self):
+        # gettting rid of animate...
+        for index, ball_rect in enumerate(self.moving_ball_rects):
+            self.drawn_balls.append(self.moving_ball_rects[index])
+            del self.moving_ball_rects[index]
+        self.screen.fill(Colors.blue)
+        if self.controller.selected != -1:
+            self.highlight_col(self.controller.selected)
+        self.draw_grid()
+        # self.draw_balls()
+        self.draw_info_screen()
+        self.draw_game_status()
+
+
+def move(num, controller):
+    move = controller.click_exec(num)
+    start_rect_click = pygame.Rect(*display.get_box(num, -1))
+    if move:
+        display.add_to_animate(Ball(start_rect_click, curr_color, move[1], num))
+    if move:
+        return True
+    else:
+        return False
+
+
+def ai_move(num):
+    print("main, determined move: ", num)
+    the_move = curr_game.execute_move(int(num))
+    start_rect_click = pygame.Rect(*display.get_box(num, -1))
+    if the_move:
+        display.add_to_animate(Ball(start_rect_click, curr_color, the_move[1], num))
+    if the_move:
+        return True
+    else:
+        return False
 
 
 curr_game = ConnectGame()
 
-display = Display(curr_game)
+controller = Controller(curr_game)
+
+display = Display(curr_game, controller)
+
+ai = AIPlayer(curr_game)
+
+# class ClickPlayer(Player):
+#
+#
+# player1 = ClickPlayer(curr_game)
+# player2 = AIPlayer(curr_game)
+
+display.draw_loop()
 
 while True:
     for event in pygame.event.get():
@@ -176,9 +232,11 @@ while True:
             curr_color = Colors.get_tile_color(curr_game.turn_count.get_curr_turn())
             pos = pygame.mouse.get_pos()
             click_pos = display.resolve_click(*pos)
-            move = curr_game.controller.click_exec(click_pos[0])
-            start_rect_click = pygame.Rect(*display.get_box(click_pos[0], -1))
-            if move:
-                display.add_to_animate(Ball(start_rect_click, curr_color, move[1], click_pos[0]))
-    display.draw()
+            if move(click_pos[0], controller):
+                ai_move(ai.determine_move())
+
+    display.faster_draw()
+    # display.draw()
+    # if display.to_animate():
+    # display.draw_loop()
     pygame.display.update()
