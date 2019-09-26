@@ -52,32 +52,6 @@ class ConnectGame:
             self.check4(x, y, *self.V)
 
     def check4(self, x, y, x_diff, y_diff):
-        # print("check4 at ", x, y)
-        # check_against = self.grid.get(x, y)
-        # direction = 1
-        #
-        # i, j = x, y
-        #
-        # count = 0
-        # # print(self.grid.get(i, j))
-        # # print(check_against)
-        #
-        # positions = []
-        #
-        # while self.grid.get(i, j) == check_against:
-        #     positions.append((i, j))
-        #     i, j = i + direction * x_diff, j + direction * y_diff
-        #     count = count + 1
-        #
-        # direction = - direction
-        # i, j = x, y
-        #
-        #
-        # while self.grid.get(i, j) == check_against:
-        #     positions.append((i, j))
-        #     i, j = i + direction * x_diff, j + direction * y_diff
-        #     count = count + 1
-
         positions = self.find_num_connected(x, y, x_diff, y_diff)
 
         count = len(positions)
@@ -165,55 +139,7 @@ class ConnectGame:
             # print("count in check4 and empty ", count)
             return count >= 4
         # else:
-            # print("invalid tile for check4")
-
-    def check_connected(self, x, y):
-        bools = [True] * 8
-        positions = [[], [], [], [], [], [], [], []]
-
-        check_against = self.grid.get(x, y)
-        if check_against != Tile.empty:
-            for i in range(4):
-                tp = x + i, y
-                bools[0] = bools[0] and self.grid.get(*tp) == check_against
-                positions[0].append(tp)
-
-                tp = x - i, y
-                bools[1] = bools[1] and self.grid.get(*tp) == check_against
-                positions[1].append(tp)
-
-                tp = x, y + i
-                bools[2] = bools[2] and self.grid.get(*tp) == check_against
-                positions[2].append(tp)
-
-                tp = x, y - i
-                bools[3] = bools[3] and self.grid.get(*tp) == check_against
-                positions[3].append(tp)
-
-                tp = x + i, y + i
-                bools[4] = bools[4] and self.grid.get(*tp) == check_against
-                positions[4].append(tp)
-
-                tp = x - i, y - i
-                bools[5] = bools[5] and self.grid.get(*tp) == check_against
-                positions[5].append(tp)
-
-                tp = x - i, y + i
-                bools[6] = bools[6] and self.grid.get(*tp) == check_against
-                positions[6].append(tp)
-
-                tp = x + i, y - i
-                bools[7] = bools[7] and self.grid.get(*tp) == check_against
-                positions[7].append(tp)
-
-            result = False
-            for index, b in enumerate(bools):
-                result = result or b
-                # # print("Wut", index, positions[index])
-                if b:
-                    self.victory_positions = positions[index]
-
-            return result
+        # print("invalid tile for check4")
 
     def get_grid(self):
         return self.grid
@@ -405,7 +331,7 @@ class TreeNode:
 class AIPlayer(Player):
     playerType = Tile.player2
     tree = None
-    maxLevels = 1
+    maxLevels = 4
     curr_depth = 0
 
     def heuristic(self, game: ConnectGame):
@@ -422,122 +348,11 @@ class AIPlayer(Player):
                 maxh = max(maxh, game.find_total_num_connected_and_free(top_pos[0], top_pos[1] + 1))
                 # print("num_connect_calc end")
 
-        print("Heur val: ", maxh)
+        # print("Heur val: ", maxh)
         return maxh
 
-    def stupid_heuristic(self, game: ConnectGame):
-        check_against = game.turn_count.curr_player
-        grid = game.get_grid()
-        results = [False, False, False, False]
-
-        for col in range(game.get_grid().get_width()):
-            pos = grid.empty_pos(col)
-            if pos is not None:
-
-                x, y = pos
-                if y >= grid.get_height() - 1 or check_against == grid.get(x, y + 1):
-                    # check_against = grid.get(x, y)
-                    if check_against != Tile.empty:
-                        # results = [True, True, True, True]
-                        for j in range(4):
-                            bools = [True, True, True, True, True, True, True, True]
-                            bools2 = [True, True, True, True, True, True, True, True]
-                            # bools = [True] * 8
-                            # positions = [[], [], [], [], [], [], [], []]
-                            # Check how many circles the move leadds to
-                            for index in range(j):
-                                i = index + 1
-                                tp = x + i, y
-                                bools[0] = bools[0] and grid.get(*tp) == check_against
-                                # positions[0].append(tp)
-
-                                tp = x - i, y
-                                bools[1] = bools[1] and grid.get(*tp) == check_against
-                                # positions[1].append(tp)
-
-                                tp = x, y + i
-                                bools[2] = bools[2] and grid.get(*tp) == check_against
-                                # positions[2].append(tp)
-
-                                tp = x, y - i
-                                bools[3] = bools[3] and grid.get(*tp) == check_against
-                                # positions[3].append(tp)
-
-                                tp = x + i, y + i
-                                bools[4] = bools[4] and grid.get(*tp) == check_against
-                                # positions[4].append(tp)
-
-                                tp = x - i, y - i
-                                bools[5] = bools[5] and grid.get(*tp) == check_against
-                                # positions[5].append(tp)
-
-                                tp = x - i, y + i
-                                bools[6] = bools[6] and grid.get(*tp) == check_against
-                                # positions[6].append(tp)
-
-                                tp = x + i, y - i
-                                bools[7] = bools[7] and grid.get(*tp) == check_against
-                                # positions[7].append(tp)
-
-                            # check if circles have space for a win
-                            for index in range(4):
-                                i = index + 1
-                                tp = x + i, y
-                                bools2[0] = bools2[0] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[0].append(tp)
-
-                                tp = x - i, y
-                                bools2[1] = bools2[1] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[1].append(tp)
-
-                                tp = x, y + i
-                                bools2[2] = bools2[2] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[2].append(tp)
-
-                                tp = x, y - i
-                                bools2[3] = bools2[3] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[3].append(tp)
-
-                                tp = x + i, y + i
-                                bools2[4] = bools2[4] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[4].append(tp)
-
-                                tp = x - i, y - i
-                                bools2[5] = bools2[5] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[5].append(tp)
-
-                                tp = x - i, y + i
-                                bools2[6] = bools2[6] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[6].append(tp)
-
-                                tp = x + i, y - i
-                                bools2[7] = bools2[7] and grid.get(*tp) == check_against or grid.get(*tp) == Tile.empty
-                                # positions[7].append(tp)
-
-                            for index, bl in enumerate(bools):
-                                bools[index] = bl and bools2[index]
-
-                            result = False
-                            for index, b in enumerate(bools):
-                                result = result or b
-
-                            if result:
-                                results[j] = True
-
-        # # print(results)
-
-        hval = 0
-
-        for index, bl in enumerate(results):
-            if bl:
-                hval = index + 1
-
-        # # print((grid.to_string()))
-        # # print(hval, "resutl")
-        return hval
-
     def ai_max(self, game, depth=0):
-        print(depth, "call max")
+        print("Max started at depth: ", depth)
         if depth >= self.maxLevels:
             heur = self.heuristic(game)
             # print("max base", heur)
@@ -546,36 +361,43 @@ class AIPlayer(Player):
             # pick max of 7 mins
             maximum = None
             index = -1
-
+            dbres = ""
             for i in range(self.game.get_grid().get_width()):
-                print("checking index i in max ", i, "current max", maximum)
+                # print("checking index i in max ", i, "current max", maximum)
                 newgame: ConnectGame = copy.copy(game)
                 # print("Exec a move max in " , i)
                 move_status = newgame.execute_move(i)
                 # move status returns a boolean false only on fail.
                 # probably not a good design but it is what it is now...
+
                 if not not move_status:
                     next_move = self.ai_mini(newgame, depth + 1)
-                    print("mini found: ", next_move)
+                    # print(next_move, end='')
+                    dbres = dbres + str(next_move)
+                    # print("mini found: ", next_move)
                     if maximum is None:
                         maximum = next_move[0]
                         index = i
                     elif next_move[0] > maximum:
                         maximum = next_move[0]
                         index = i
-            print("max ret", maximum, index)
+
+            print("Max at depth: ", depth, " Trying to pick between: -", dbres)
+            print("Max picked value", maximum, "at", index)
             return maximum, index
 
     def ai_mini(self, game, depth):
-        print(depth, "call min")
+        print("Mini started at depth: ", depth)
         minimum = None
         index = -1
+        dbres = ""
         for i in range(self.game.get_grid().get_width()):
             newgame: ConnectGame = copy.copy(game)
             # print("Exec a move mini in ", i)
             newgame.execute_move(i)
             next_move = self.ai_max(newgame, depth + 1)
-
+            dbres = dbres + str(next_move)
+            # print(next_move, end='')
             if minimum is None:
                 minimum = next_move[0]
                 index = i
@@ -584,7 +406,8 @@ class AIPlayer(Player):
                 index = i
 
             # minimum = min(minimum, next_move[0]) if minimum is not None else next_move[0]
-        print("min ret", minimum, index)
+        print("mini at depth: ", depth, " Trying to pick between: -", dbres)
+        print("mini picked value", minimum, "at", index)
         return minimum, index
 
     # def expandTree(self):
