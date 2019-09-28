@@ -40,24 +40,22 @@ ai = AIPlayer(curr_game)
 # player2 = AIPlayer(curr_game)
 
 display.draw_loop()
-
-ai_movee = False
+# ai = AIPlayer(curr_game)
 
 while True:
     for event in pygame.event.get():
-        if ai_movee:
-            ai = AIPlayer(curr_game)
-            ai_move(ai.determine_move())
-            ai_movee = False
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONUP:
+            print(ai.heuristic(curr_game))
             curr_color = Colors.get_tile_color(curr_game.turn_count.get_curr_turn())
             pos = pygame.mouse.get_pos()
             click_pos = display.resolve_click(*pos)
-            if move(click_pos[0], controller):
-                ai_movee = True
+            move(click_pos[0], controller)
+            #     ai_move(ai.determine_move())
+            print("Heuristic: ", ai.heuristic(curr_game))
+            # print(curr_game)
 
     display.faster_draw()
     # display.draw()
