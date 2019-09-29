@@ -4,6 +4,25 @@ import copy
 import numpy as np
 
 
+class Tile(Enum):
+    player1 = 0
+    player2 = 1
+    empty = 2
+    out_of_bounds = 3
+
+    @staticmethod
+    def check_player(player_a):
+        return Tile.player1 == player_a or Tile.player2 == player_a
+
+    @staticmethod
+    def other_player(player):
+        if Tile.check_player(player):
+            if player == Tile.player1:
+                return Tile.player2
+            else:
+                return Tile.player1
+
+
 class ConnectGame:
     victory_player = None
     game_over = False
@@ -22,9 +41,9 @@ class ConnectGame:
         result.victory_positions = self.victory_positions
         return result
 
-    def __init__(self):
+    def __init__(self, player_first=Tile.player1):
         self.grid = Grid()
-        self.turn_count = MoveTracker()
+        self.turn_count = MoveTracker(player_first)
 
     def execute_move(self, pos, player=None):
         if not player:
@@ -184,25 +203,15 @@ class ConnectGame:
         return self.grid
 
 
-class Tile(Enum):
-    player1 = 0
-    player2 = 1
-    empty = 2
-    out_of_bounds = 3
-
-    @staticmethod
-    def check_player(player_a):
-        return Tile.player1 == player_a or Tile.player2 == player_a
-
-
 class MoveTracker:
     curr_player = Tile.player1
 
     def __copy__(self):
-        return MoveTracker(player2first=self.curr_player == Tile.player2)
+        return MoveTracker(player_first=self.curr_player)
 
-    def __init__(self, player2first=False):
-        if player2first: self.curr_player = Tile.player2
+    def __init__(self, player_first=Tile.player1):
+        if Tile.check_player(player_first):
+            self.curr_player = player_first
 
     def next_turn(self):
         self.curr_player = Tile.player1 if self.curr_player == Tile.player2 else Tile.player2
@@ -316,16 +325,6 @@ class Colors:
             return Colors.white
 
 
-class Player:
-    game: ConnectGame
-
-    def __init__(self, game):
-        self.game = game
-
-    def determine_move(self) -> int:
-        return 0
-
-
 class TreeNode:
     game: ConnectGame
     hval = 0.0
@@ -334,14 +333,19 @@ class TreeNode:
         self.children: [TreeNode] = [arg for arg in argv]
 
 
-class AIPlayer(Player):
+class AIPlayer:
+    game: ConnectGame
     playerType = Tile.player2
     tree = None
-    maxLevels = 4
+    maxLevels: int
 
     # 6 - 30-50 s
     # 7 - 250-300 s
     # 8 - >800 s
+
+    def __init__(self, game, ply=4):
+        self.game = game
+        self.maxLevels = ply
 
     def heuristic(self, game: ConnectGame):
         if game.game_over:
@@ -423,20 +427,21 @@ class AIPlayer(Player):
             index = -1
             dbres = ""
             for i in range(self.game.get_grid().get_width()):
-                newgame: ConnectGame = copy.copy(game)
-                move_status = newgame.execute_move(i)
-                if not not won_depth and newgame.game_over:
-                    won_depth = depth
-                next_move = self.ai_mini(newgame, depth + 1)
-                dbres = dbres + str(next_move)
-                if maximum is None:
-                    maximum = next_move[0]
-                    index = i
-                elif next_move[0] > maximum:
-                    maximum = next_move[0]
-                    index = i
+                if game.grid.empty_pos(i) is not None:
+                    newgame: ConnectGame = copy.copy(game)
+                    move_status = newgame.execute_move(i)
+                    if not not won_depth and newgame.game_over:
+                        won_depth = depth
+                    next_move = self.ai_mini(newgame, depth + 1)
+                    dbres = dbres + str(next_move)
+                    if maximum is None:
+                        maximum = next_move[0]
+                        index = i
+                    elif next_move[0] > maximum:
+                        maximum = next_move[0]
+                        index = i
 
-            print("Max at depth: ", depth, " Trying to pick between: -", dbres)
+            # print("Max at depth: ", depth, " Trying to pick between: -", dbres)
             # print("Max picked value", maximum, "at", index)
             return maximum, index
 
@@ -470,7 +475,7 @@ class AIPlayer(Player):
                     minimum = next_move[0]
                     index = i
 
-            print("mini at depth: ", depth, " Trying to pick between: -", dbres)
+            # print("mini at depth: ", depth, " Trying to pick between: -", dbres)
             # print("mini picked value", minimum, "at", index)
             return minimum, index
 
