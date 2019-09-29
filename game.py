@@ -59,7 +59,7 @@ class ConnectGame:
             self.check4(x, y, *self.V)
 
     def check4(self, x, y, x_diff, y_diff):
-        positions = self.find_num_connected(x, y, x_diff, y_diff)
+        positions = self.find_num_connected_list(x, y, x_diff, y_diff)
 
         count = len(positions)
         result = count >= 4
@@ -69,7 +69,7 @@ class ConnectGame:
         # # print("count", count)
         return result
 
-    def find_num_connected(self, x, y, x_diff, y_diff):
+    def find_num_connected_list(self, x, y, x_diff, y_diff):
         # print("find num connect ", x, y, self.grid.get(x, y))
         # return [] instead of None
         check_against = self.grid.get(x, y)
@@ -104,32 +104,43 @@ class ConnectGame:
             # print("num connected from ", x, y, " at diff", x_diff, y_diff, ": ", len(positions))
             return positions
 
-    # def find_total_num_connected_and_free(self, x, y):
-    # print("finding num connected and free at", x, y, self.grid.get(x, y))
-    # return max(
-    #     (len(self.find_num_connected(x, y, *self.D2)) if self.check4_and_empty(x, y, *self.D2) else 0) * 20,
-    #     (len(self.find_num_connected(x, y, *self.D1)) if self.check4_and_empty(x, y, *self.D1) else 0) * 10,
-    #     (len(self.find_num_connected(x, y, *self.V)) if self.check4_and_empty(x, y, *self.V) else 0) * 60,
-    #     (len(self.find_num_connected(x, y, *self.H)) if self.check4_and_empty(x, y, *self.H) else 0) * 70,
-    # )
-    # return \
-    # (len(self.find_num_connected(x, y, *self.D2)) if self.check4_and_empty(x, y, *self.D2) else 0) * 20 + \
-    # (len(self.find_num_connected(x, y, *self.D1)) if self.check4_and_empty(x, y, *self.D1) else 0) * 10 + \
-    # return \
-    #     (len(self.find_num_connected(x, y, *self.V)) if self.check4_and_empty(x, y, *self.V) else 0) + \
-    #     (len(self.find_num_connected(x, y, *self.H)) if self.check4_and_empty(x, y, *self.H) else 0)
+    def find_num_connected(self, x, y, x_diff, y_diff):
+        # print("find num connect ", x, y, self.grid.get(x, y))
+        # return [] instead of None
+        check_against = self.grid.get(x, y)
+        if not (check_against == Tile.empty or check_against == Tile.out_of_bounds):
 
-    def num_connected_H(self, x, y):
-        return len(self.find_num_connected(x, y, *self.H)) if self.check4_and_empty(x, y, *self.H) else 0
+            direction = 1
 
-    def num_connected_V(self, x, y):
-        return len(self.find_num_connected(x, y, *self.H)) if self.check4_and_empty(x, y, *self.V) else 0
+            i, j = x, y
 
-    def num_connected_D1(self, x, y):
-        return len(self.find_num_connected(x, y, *self.D1)) if self.check4_and_empty(x, y, *self.V) else 0
+            count = 0
 
-    def num_connected_D2(self, x, y):
-        return len(self.find_num_connected(x, y, *self.D2)) if self.check4_and_empty(x, y, *self.V) else 0
+            while self.grid.get(i, j) == check_against:
+                i, j = i + direction * x_diff, j + direction * y_diff
+                count = count + 1
+
+            direction = - direction
+            i, j = x, y
+            i, j = i + direction * x_diff, j + direction * y_diff
+
+            while self.grid.get(i, j) == check_against:
+                i, j = i + direction * x_diff, j + direction * y_diff
+                count = count + 1
+
+            return count
+
+    def num_connected_h(self, x, y):
+        return min(self.find_num_connected(x, y, *self.H) if self.check4_and_empty(x, y, *self.H) else 0, 4)
+
+    def num_connected_v(self, x, y):
+        return min(self.find_num_connected(x, y, *self.H) if self.check4_and_empty(x, y, *self.V) else 0, 4)
+
+    def num_connected_d1(self, x, y):
+        return min(self.find_num_connected(x, y, *self.D1) if self.check4_and_empty(x, y, *self.V) else 0, 4)
+
+    def num_connected_d2(self, x, y):
+        return min(self.find_num_connected(x, y, *self.D2) if self.check4_and_empty(x, y, *self.V) else 0, 4)
 
     def check4_and_empty(self, x, y, x_diff, y_diff):
         # print("check4empty called")
@@ -329,7 +340,7 @@ class Grid:
     # def __init__(self):
 
 
-class Colors():
+class Colors:
     victory_tile_highlight = 0, 255, 255
     yellow = 255, 200, 0
     red = 200, 0, 0
@@ -371,14 +382,15 @@ class AIPlayer(Player):
     playerType = Tile.player2
     tree = None
     maxLevels = 6
-
-    # curr_depth = 0
+    # 6 - 30-50 s
+    # 7 - 250-300 s
+    # 8 - >800 s
 
     def heuristic(self, game: ConnectGame):
         if game.game_over:
             if Tile.check_player(game.victory_player):
                 if game.victory_player != game.turn_count.curr_player:
-                    return 0
+                    return 1
                 else:
                     return 10000
         grid: Grid = game.get_grid()
@@ -388,13 +400,6 @@ class AIPlayer(Player):
         # d1
         # d2
 
-        connected_matrix = np.array([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-        ])
-
         # normalize this matrix later
         connected_count_matrix = np.array([
             [0, 0, 0, 0],
@@ -403,9 +408,9 @@ class AIPlayer(Player):
             [0, 0, 0, 0],
         ])
 
-        num_connected_weights = np.array([1, 2, 3, 4])
+        num_connected_weights = np.transpose(np.array([1, 10, 100, 1000]))
 
-        type_connected_weights = np.array([1, 2, 3, 4])
+        type_connected_weights = np.transpose(np.array([3, 4, 1, 2]))
 
         for col in range(grid.get_width()):
             # print("getting val for col ", col)
@@ -418,26 +423,41 @@ class AIPlayer(Player):
                 if (grid.get(*top_pos_fill) != game.turn_count.curr_player) or \
                         (grid.get(*top_pos_fill) != Tile.empty) or \
                         (grid.get(*top_pos_fill) != Tile.out_of_bounds):
-            # print("num_connect_calc start")
-            # maxha = max(maxha, game.find_total_num_connected_and_free(*top_pos_fill))
 
-            # print("num_connect_calc end")
+                    hc = game.num_connected_h(*top_pos_fill)
+                    if hc != 0:
+                        connected_count_matrix[0, hc - 1] = connected_count_matrix[0, hc - 1] + 1
 
-            # defence
-            # if (grid.get(*top_pos_fill) == game.turn_count.curr_player) or \
-            #         (grid.get(*top_pos_fill) != Tile.empty) or \
-            #         (grid.get(*top_pos_fill) != Tile.out_of_bounds):
-            #     # print("num_connect_calc start")
-            #     maxhb = max(maxhb, game.find_total_num_connected_and_free(*top_pos_fill))
-            #     # print("num_connect_calc end")
+                    vc = game.num_connected_v(*top_pos_fill)
+                    if vc != 0:
+                        connected_count_matrix[1, vc - 1] = connected_count_matrix[0, vc - 1] + 1
 
-        return 100 * maxha - maxhb
+                    d1c = game.num_connected_d1(*top_pos_fill)
+                    if d1c != 0:
+                        connected_count_matrix[2, d1c - 1] = connected_count_matrix[0, d1c - 1] + 1
 
-    def ai_max(self, game, depth=0):
+                    d2c = game.num_connected_d2(*top_pos_fill)
+                    if d2c != 0:
+                        connected_count_matrix[3, d2c - 1] = connected_count_matrix[0, d2c - 1] + 1
+
+        num_cap = game.grid.get_width()
+
+        # heuristic = np.sum(np.multiply(connected_count_matrix, type_connected_weights))
+        heuristic = np.sum(np.dot(np.transpose(np.multiply(connected_count_matrix, num_connected_weights)),
+                                  type_connected_weights))
+
+        return heuristic
+
+        # return 100 * maxha - maxhb
+
+    def ai_max(self, game, depth=0, won_depth=None):
         # pick worst option for min. i.e. least heur.
         # print("Max started at depth: ", depth)
         if depth >= self.maxLevels:
-            heur = self.heuristic(game)
+            mul = 1
+            if not not won_depth:
+                mul = won_depth
+            heur = self.heuristic(game) * mul
             # print("max base", heur)
             return heur, -1
         else:
@@ -446,18 +466,12 @@ class AIPlayer(Player):
             index = -1
             dbres = ""
             for i in range(self.game.get_grid().get_width()):
-                # print("checking index i in max ", i, "current max", maximum)
                 newgame: ConnectGame = copy.copy(game)
-                # print("Exec a move max in " , i)
                 move_status = newgame.execute_move(i)
-                # move status returns a boolean false only on fail.
-                # probably not a good design but it is what it is now...
-
-                # if not not move_status:
+                if not not won_depth and newgame.game_over:
+                    won_depth = depth
                 next_move = self.ai_mini(newgame, depth + 1)
-                # print(next_move, end='')
                 dbres = dbres + str(next_move)
-                # print("mini found: ", next_move)
                 if maximum is None:
                     maximum = next_move[0]
                     index = i
@@ -465,34 +479,43 @@ class AIPlayer(Player):
                     maximum = next_move[0]
                     index = i
 
-            # print("Max at depth: ", depth, " Trying to pick between: -", dbres)
+            print("Max at depth: ", depth, " Trying to pick between: -", dbres)
             # print("Max picked value", maximum, "at", index)
             return maximum, index
 
-    def ai_mini(self, game, depth):
-        # pick best option for yourself. i.e. pick max heur
-        # print("Mini started at depth: ", depth)
-        minimum = None
-        index = -1
-        dbres = ""
-        for i in range(self.game.get_grid().get_width()):
-            newgame: ConnectGame = copy.copy(game)
-            # print("Exec a move mini in ", i)
-            newgame.execute_move(i)
-            next_move = self.ai_max(newgame, depth + 1)
-            dbres = dbres + str(next_move)
-            # print(next_move, end='')
-            if minimum is None:
-                minimum = next_move[0]
-                index = i
-            elif next_move[0] < minimum:
-                minimum = next_move[0]
-                index = i
+    def ai_mini(self, game, depth, won_depth=None):
+        if depth >= self.maxLevels:
+            mul = 1
+            if not not won_depth:
+                mul = won_depth
+            heur = self.heuristic(game) * mul
+            # print("max base", heur)
+            return heur, -1
+        else:
+            # pick best option for yourself. i.e. pick max heur
+            # print("Mini started at depth: ", depth)
+            minimum = None
+            index = -1
+            dbres = ""
+            for i in range(self.game.get_grid().get_width()):
+                newgame: ConnectGame = copy.copy(game)
+                # print("Exec a move mini in ", i)
+                newgame.execute_move(i)
+                if not not won_depth and newgame.game_over:
+                    won_depth = depth
+                next_move = self.ai_max(newgame, depth + 1, won_depth)
+                dbres = dbres + str(next_move)
+                # print(next_move, end='')
+                if minimum is None:
+                    minimum = next_move[0]
+                    index = i
+                elif next_move[0] < minimum:
+                    minimum = next_move[0]
+                    index = i
 
-            # minimum = min(minimum, next_move[0]) if minimum is not None else next_move[0]
-        # print("mini at depth: ", depth, " Trying to pick between: -", dbres)
-        # print("mini picked value", minimum, "at", index)
-        return minimum, index
+            print("mini at depth: ", depth, " Trying to pick between: -", dbres)
+            # print("mini picked value", minimum, "at", index)
+            return minimum, index
 
     # def expandTree(self):
 

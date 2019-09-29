@@ -1,5 +1,6 @@
 from display import *
 import sys
+import time
 
 
 def move(num, controller):
@@ -15,6 +16,7 @@ def move(num, controller):
 
 def ai_move(num):
     print("main, determined move: ", num)
+    print("main, board before move: ", curr_game.grid.to_string())
     the_move = curr_game.execute_move(int(num))
     start_rect_click = pygame.Rect(*display.get_box(num, -1))
     if the_move:
@@ -47,7 +49,9 @@ while True:
     for event in pygame.event.get():
         if ai_movee:
             ai = AIPlayer(curr_game)
+            start_time = time.time()
             ai_move(ai.determine_move())
+            print("Time taken: ", time.time() - start_time)
             ai_movee = False
         if event.type == pygame.QUIT:
             pygame.quit()
