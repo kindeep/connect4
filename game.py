@@ -23,29 +23,31 @@ class ConnectGame:
         return result
 
     def __init__(self):
-        # self.controller: Controller = Controller(self)
         self.grid = Grid()
         self.turn_count = MoveTracker()
 
-    def execute_move(self, pos):
+    def execute_move(self, pos, player=None):
+        if not player:
+            player = self.turn_count.curr_player
         if not self.game_over:
-            result = False
-            for i in range(self.grid.get_height())[::-1]:
-                if self.grid.check_empty(pos, i):
-                    self.grid.set(pos, i, self.turn_count.get_curr_turn())
-                    self.turn_count.next_turn()
-                    result = pos, i
-                    break
+            if self.turn_count.curr_player == player:
+                result = False
+                for i in range(self.grid.get_height())[::-1]:
+                    if self.grid.check_empty(pos, i):
+                        self.grid.set(pos, i, self.turn_count.get_curr_turn())
+                        self.turn_count.next_turn()
+                        result = pos, i
+                        break
 
-            if result:
-                # print("resutl in exec move", result)
-                if self.check_connected2(*result):
-                    self.game_over = True
-                    self.victory_player = self.grid.get(*result)
-                    # self.victory_player =
+                if result:
+                    # print("resutl in exec move", result)
+                    if self.check_connected2(*result):
+                        self.game_over = True
+                        self.victory_player = self.grid.get(*result)
+                        # self.victory_player =
 
-            if (result):
-                return result
+                if (result):
+                    return result
         else:
             # still does next turn, remove this later.
             self.turn_count.next_turn()
@@ -180,52 +182,6 @@ class ConnectGame:
 
     def get_grid(self):
         return self.grid
-
-
-class Controller:
-    selected = -1
-
-    def __init__(self, game):
-        self.game: ConnectGame = game
-        self.reset_selection()
-
-    def select(self, position: int) -> bool:
-        if (position >= 0 and position < self.game.grid.get_width()):
-            self.selected = position
-            return True
-        else:
-            return False
-
-    def reset_selection(self):
-        self.selected = -1
-
-    def execute_turn(self):
-        # # print(self.selected)
-        result = False
-        if self.selected != -1:
-            # print("Selected not -1?")
-            result = self.game.execute_move(self.selected)
-        self.reset_selection()
-        # # print(self.selected)
-        return result
-
-    def set_selection(self, x) -> bool:
-        # # print("set?")
-        if x >= 0 and x < self.game.get_grid().get_width():
-            self.selected = x
-            return True
-        else:
-            return False
-
-    def click_exec(self, x):
-        if x >= 0 and x < self.game.get_grid().get_width():
-            if self.selected == x:
-                return self.execute_turn()
-            else:
-                self.set_selection(x)
-                return False
-        else:
-            return False
 
 
 class Tile(Enum):
@@ -381,7 +337,8 @@ class TreeNode:
 class AIPlayer(Player):
     playerType = Tile.player2
     tree = None
-    maxLevels = 6
+    maxLevels = 4
+
     # 6 - 30-50 s
     # 7 - 250-300 s
     # 8 - >800 s
