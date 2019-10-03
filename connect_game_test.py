@@ -27,9 +27,9 @@ def ai_move(num):
 
 curr_game = ConnectGame()
 
-controller = Controller(curr_game)
+# controller = Controller(curr_game)
 
-display = Display(curr_game, controller)
+display = Display(curr_game)
 
 ai = AIPlayer(curr_game)
 

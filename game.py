@@ -348,12 +348,13 @@ class AIPlayer:
         self.maxLevels = ply
 
     def heuristic(self, game: ConnectGame):
+        player = self.playerType
         if game.game_over:
             if Tile.check_player(game.victory_player):
-                if game.victory_player != game.turn_count.curr_player:
+                if game.victory_player != player:
                     return 1
                 else:
-                    return 10000
+                    return 10000000000000000000000
         grid: Grid = game.get_grid()
 
         # h
@@ -369,9 +370,9 @@ class AIPlayer:
             [0, 0, 0, 0],
         ])
 
-        num_connected_weights = np.transpose(np.array([1, 10, 100, 1000]))
+        num_connected_weights = np.transpose(np.array([1, 100, 10000, 100000000]))
 
-        type_connected_weights = np.transpose(np.array([3, 4, 1, 2]))
+        type_connected_weights = np.transpose(np.array([1, 1, 1, 1]))
 
         for col in range(grid.get_width()):
             # print("getting val for col ", col)
@@ -381,7 +382,7 @@ class AIPlayer:
             if top_pos is not None:
                 top_pos_fill = top_pos[0], top_pos[1] + 1
                 # attack
-                if (grid.get(*top_pos_fill) != game.turn_count.curr_player) or \
+                if (grid.get(*top_pos_fill) != player) or \
                         (grid.get(*top_pos_fill) != Tile.empty) or \
                         (grid.get(*top_pos_fill) != Tile.out_of_bounds):
 
@@ -404,10 +405,11 @@ class AIPlayer:
         num_cap = game.grid.get_width()
 
         # heuristic = np.sum(np.multiply(connected_count_matrix, type_connected_weights))
-        heuristic = np.sum(np.dot(np.transpose(np.multiply(connected_count_matrix, num_connected_weights)),
-                                  type_connected_weights))
+        # heuristic = np.sum(np.dot(np.transpose(np.multiply(connected_count_matrix, num_connected_weights)),
+        #                           type_connected_weights))
+        heuristic = np.multiply(connected_count_matrix, num_connected_weights)
 
-        return heuristic
+        return np.sum(heuristic)
 
         # return 100 * maxha - maxhb
 
@@ -441,7 +443,7 @@ class AIPlayer:
                         maximum = next_move[0]
                         index = i
 
-            # print("Max at depth: ", depth, " Trying to pick between: -", dbres)
+            print("Max at depth: ", depth, " Trying to pick between: -", dbres)
             # print("Max picked value", maximum, "at", index)
             return maximum, index
 
@@ -475,7 +477,7 @@ class AIPlayer:
                     minimum = next_move[0]
                     index = i
 
-            # print("mini at depth: ", depth, " Trying to pick between: -", dbres)
+            print("mini at depth: ", depth, " Trying to pick between: -", dbres)
             # print("mini picked value", minimum, "at", index)
             return minimum, index
 

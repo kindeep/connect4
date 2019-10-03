@@ -19,8 +19,8 @@ class Ball:
 class Display:
     info_padding: int = 0.01
     text_size = 30
-    moving_ball_rects: [Ball] = []
-    drawn_balls: [Ball] = []
+    # moving_ball_rects: [Ball] = []
+    # drawn_balls: [Ball] = []
     width = 500
     height = 400
 
@@ -48,28 +48,28 @@ class Display:
         self.box_width = self.board_width / self.game.get_grid().get_width()
         self.box_height = self.board_height / self.game.get_grid().get_height()
 
-        self.draw_loop()
+        # self.draw_loop()
 
     def highlight_col(self, num):
         pygame.draw.rect(self.screen, Colors.col_highlight,
                          (num * self.box_width, 0, self.box_width, self.board_height))
 
-    def to_animate(self):
-        return len(self.moving_ball_rects) > 0
+    # def to_animate(self):
+    #     return len(self.moving_ball_rects) > 0
 
     # ball_rect: pygame.Rect = (0, 0, 0, 0)
 
-    def animate_drop(self):
-        for index, ball_rect in enumerate(self.moving_ball_rects):
-            speed = [0, 100]
-            ball_rect.rect = ball_rect.rect.move(speed)
-            pygame.draw.ellipse(self.screen, ball_rect.color, ball_rect.rect)
-            if ball_rect.rect[1] > (ball_rect.y * self.box_height):
-                self.drawn_balls.append(self.moving_ball_rects[index])
-                del self.moving_ball_rects[index]
-
-    def add_to_animate(self, ball: Ball):
-        self.moving_ball_rects.append(ball)
+    # def animate_drop(self):
+        # for index, ball_rect in enumerate(self.moving_ball_rects):
+        #     speed = [0, 100]
+        #     ball_rect.rect = ball_rect.rect.move(speed)
+        #     pygame.draw.ellipse(self.screen, ball_rect.color, ball_rect.rect)
+        #     if ball_rect.rect[1] > (ball_rect.y * self.box_height):
+        #         self.drawn_balls.append(self.moving_ball_rects[index])
+        #         del self.moving_ball_rects[index]
+    #
+    # def add_to_animate(self, ball: Ball):
+    #     self.moving_ball_rects.append(ball)
 
     def get_center(self, left, top, width, height):
         return left + width / 2, top + height / 2
@@ -149,28 +149,28 @@ class Display:
                                     Colors.get_tile_color(self.game.grid.get(x, y))
                                     , self.get_box(x, y))
 
-    def draw_balls(self):
-        for ball in self.drawn_balls:
-            # print("drawing ball")
-            pygame.draw.ellipse(self.screen,
-                                Colors.get_tile_color(self.game.get_grid().get(ball.x, ball.y))
-                                , self.get_box(ball.x, ball.y))
+    # def draw_balls(self):
+    #     for ball in self.drawn_balls:
+    #         # print("drawing ball")
+    #         pygame.draw.ellipse(self.screen,
+    #                             Colors.get_tile_color(self.game.get_grid().get(ball.x, ball.y))
+    #                             , self.get_box(ball.x, ball.y))
 
-    def draw_loop(self):
-        self.screen.fill(Colors.blue)
-        if self.controller.selected != -1:
-            self.highlight_col(self.controller.selected)
-        self.draw_board()
-        self.animate_drop()
-        self.draw_info_screen()
-        self.draw_balls()
-        self.draw_game_status()
+    # def draw_loop(self):
+    #     self.screen.fill(Colors.blue)
+    #     if self.controller.selected != -1:
+    #         self.highlight_col(self.controller.selected)
+    #     self.draw_board()
+    #     # self.animate_drop()
+    #     self.draw_info_screen()
+    #     # self.draw_balls()
+    #     self.draw_game_status()
 
     def faster_draw(self):
         # gettting rid of animate...
-        for index, ball_rect in enumerate(self.moving_ball_rects):
-            self.drawn_balls.append(self.moving_ball_rects[index])
-            del self.moving_ball_rects[index]
+        # for index, ball_rect in enumerate(self.moving_ball_rects):
+        #     self.drawn_balls.append(self.moving_ball_rects[index])
+        #     del self.moving_ball_rects[index]
         self.screen.fill(Colors.blue)
         if self.controller.selected != -1:
             self.highlight_col(self.controller.selected)
