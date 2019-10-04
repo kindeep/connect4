@@ -1,0 +1,17 @@
+executable file is main.py, the project is written in python3
+
+The dependencies for the project are listed in requirements.txt, use pip to install dependencies.
+
+Use pip install -r requirements.txt
+
+Select game mode, either PvP or vs AI
+
+Then select who should go first
+
+The gui should pop up.
+
+The gui updates on click,
+
+Click to select column
+click again to place piece.
+The display updates with your move after the ai is done executing.
