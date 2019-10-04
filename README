@@ -15,6 +15,8 @@ Runs the program assuming a virtual environment is set up.
 
 Another option is to just do pip install -r requirements.txt, the requirements are just numpy and pygame.
 
+Yet another option for windows is cd to dist/main and run main.exe. I used a tool called pyintaller to build this executeable.
+
 Execution
 ==========
 
