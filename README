@@ -1,17 +1,33 @@
+Setup/Installation
+==================
+
 executable file is main.py, the project is written in python3
 
 The dependencies for the project are listed in requirements.txt, use pip to install dependencies.
 
-Use pip install -r requirements.txt
+Theres two scripts included:
 
-Select game mode, either PvP or vs AI
+1. install_requirements.sh
+Creates a python virtual environment and installs dependencies inside the enviornment.
 
-Then select who should go first
+2. run.sh
+Runs the program assuming a virtual environment is set up.
 
-The gui should pop up.
+Another option is to just do pip install -r requirements.txt, the requirements are just numpy and pygame.
 
-The gui updates on click,
+Execution
+==========
 
-Click to select column
-click again to place piece.
-The display updates with your move after the ai is done executing.
+After running main.py, the program will prompt you to select game mode, either PvP or vs AI
+
+If selecting ai, program will ask who should go first, user or ai
+
+The gui for the game, a pygame window will then pop up.
+
+The gui updates on click, (Click to update if just a black screen is visible in the pygame window)
+
+Click to select column, the column is highlighted indicating that it is selected.
+
+Click a selected column to place a piece.
+
+The display updates with your move after the ai is done executing. This can take long depending on what ply you specified.
