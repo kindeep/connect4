@@ -3,16 +3,19 @@ import copy
 import numpy as np
 
 
+# Enum to describe a player
 class Tile(Enum):
     player1 = 0
     player2 = 1
     empty = 2
     out_of_bounds = 3
 
+    # check if the provided input is a player tile
     @staticmethod
     def check_player(player_a):
         return Tile.player1 == player_a or Tile.player2 == player_a
 
+    # get the opponent for the input player
     @staticmethod
     def other_player(player):
         if Tile.check_player(player):
@@ -22,6 +25,7 @@ class Tile(Enum):
                 return Tile.player1
 
 
+# Main logic for the game
 class ConnectGame:
     victory_player = None
     game_over = False
@@ -44,6 +48,7 @@ class ConnectGame:
         self.grid = Grid()
         self.turn_count = MoveTracker(player_first)
 
+    # execute move at col=pos
     def execute_move(self, pos, player=None):
         if not player:
             player = self.turn_count.curr_player
@@ -67,6 +72,7 @@ class ConnectGame:
         else:
             self.turn_count.next_turn()
 
+    # check if the provided tile is part of a 4 connect
     def check_connected2(self, x, y):
         return \
             self.check4(x, y, *self.D1) or \
@@ -74,6 +80,7 @@ class ConnectGame:
             self.check4(x, y, *self.H) or \
             self.check4(x, y, *self.V)
 
+    # helper method for check_connected, D1 D2 H and V defines what kind of 4 connect is being checked, Horizontal, vertical ..
     def check4(self, x, y, x_diff, y_diff):
         positions = self.find_num_connected_list(x, y, x_diff, y_diff)
 
@@ -84,6 +91,7 @@ class ConnectGame:
             self.victory_positions = positions
         return result
 
+    # Returns a list of connected positions
     def find_num_connected_list(self, x, y, x_diff, y_diff):
         check_against = self.grid.get(x, y)
         if not (check_against == Tile.empty or check_against == Tile.out_of_bounds):
@@ -112,6 +120,7 @@ class ConnectGame:
 
             return positions
 
+    # returns how many pieces are connected in type of connect defined by diff
     def find_num_connected(self, x, y, x_diff, y_diff):
         check_against = self.grid.get(x, y)
         if not (check_against == Tile.empty or check_against == Tile.out_of_bounds):
@@ -136,6 +145,7 @@ class ConnectGame:
 
             return count
 
+    # returns how many horizontal pieces are connected at given x y. other methods similar.
     def num_connected_h(self, x, y):
         return min(self.find_num_connected(x, y, *self.H) if self.check4_and_empty(x, y, *self.H) else 0, 4)
 
@@ -148,6 +158,7 @@ class ConnectGame:
     def num_connected_d2(self, x, y):
         return min(self.find_num_connected(x, y, *self.D2) if self.check4_and_empty(x, y, *self.V) else 0, 4)
 
+    # Checks if there is space to make a 4 connect with given x y and type of connect defined by diff.
     def check4_and_empty(self, x, y, x_diff, y_diff):
         check_against = self.grid.get(x, y)
         if not (check_against == Tile.empty or check_against == Tile.out_of_bounds):
@@ -181,6 +192,7 @@ class ConnectGame:
         return self.grid
 
 
+# Admittedly unnecessary class to track current move. Literally just tracks current move.
 class MoveTracker:
     curr_player = Tile.player1
 
@@ -205,6 +217,7 @@ class MoveTracker:
         return self.curr_player
 
 
+# defins the structure that stores the connect4 board.
 class Grid:
     array = [
         [Tile.empty, Tile.empty, Tile.empty, Tile.empty, Tile.empty, Tile.empty, Tile.empty],
@@ -235,6 +248,7 @@ class Grid:
         result.array = resarray
         return result
 
+    # returns the first empty available position in a col
     def empty_pos(self, col):
         for i in range(self.get_height())[::-1]:
             if self.get(col, i) == Tile.empty:
@@ -246,6 +260,7 @@ class Grid:
     def get_height(self) -> int:
         return 6
 
+    # checks if player 1 tile is at x y. following methods similar.
     def check_player1(self, x, y) -> bool:
         return self.array[y][x] == Tile.player1
 
@@ -258,6 +273,7 @@ class Grid:
     def set(self, x, y, val):
         self.array[y][x] = val
 
+    # gets the tile at x, y
     def get(self, x, y):
         if x < self.get_width() and x >= 0 and y < self.get_height() and y >= 0:
             return self.array[y][x]
@@ -269,34 +285,7 @@ class Grid:
     # def __init__(self):
 
 
-class Colors:
-    victory_tile_highlight = 0, 255, 255
-    yellow = 255, 200, 0
-    red = 200, 0, 0
-    blue = 0, 0, 255
-    black = 0, 0, 0
-    white = 255, 255, 255
-    info = 200, 200, 200
-    col_highlight = 100, 100, 230
-
-    @staticmethod
-    def get_tile_color(tile: Tile):
-        if tile == Tile.player2:
-            return Colors.red
-        if tile == Tile.player1:
-            return Colors.yellow
-        else:
-            return Colors.white
-
-
-class TreeNode:
-    game: ConnectGame
-    hval = 0.0
-
-    def __init__(self, *argv):
-        self.children: [TreeNode] = [arg for arg in argv]
-
-
+# Defines a player to make next move decisions.
 class AIPlayer:
     game: ConnectGame
     tree = None
@@ -312,8 +301,11 @@ class AIPlayer:
         self.maxLevels = ply
 
     def heuristic(self, game: ConnectGame):
-        return 2 * self.wut_heuristic(game, self.playerType) - self.wut_heuristic(game, Tile.other_player(self.playerType))
+        # returns (self heuristic vs heuristic for opponent) with self given preference. attack - defence, attack has preference.
+        return 2 * self.wut_heuristic(game, self.playerType) - self.wut_heuristic(game,
+                                                                                  Tile.other_player(self.playerType))
 
+    # The actual heuristic calculation stuff. The heuristic takes into account size and number of connect series.
     def wut_heuristic(self, game: ConnectGame, player):
         if game.game_over:
             if Tile.check_player(game.victory_player):
@@ -324,6 +316,7 @@ class AIPlayer:
 
         grid: Grid = game.get_grid()
 
+        # upcoming matrix stores how many of size 1 2 3 and 4 connections are there of the types horizontal, vertical ...
         # h
         # v
         # d1
@@ -336,6 +329,7 @@ class AIPlayer:
             [0.0, 0.0, 0.0, 0.0],
         ])
 
+        # actually fill up the matrix.
         for col in range(grid.get_width()):
             top_pos = grid.empty_pos(col)
             if top_pos is not None:
@@ -359,11 +353,13 @@ class AIPlayer:
                     if d2c != 0:
                         connected_count_matrix[3][d2c - 1] = connected_count_matrix[0][d2c - 1] + 1
 
+        # determine a max value, to later give preference to 4 connects without losing other connect data
         cap = 0
         start = 3
         while cap == 0 and start >= 0:
             cap = max(cap, max([connected_count_matrix[i][start] for i in range(4)]))
             start = start - 1
+
         if cap != 0:
             for ri, r in enumerate(connected_count_matrix):
                 for ci, c in enumerate(r):
@@ -377,6 +373,7 @@ class AIPlayer:
         else:
             return 0
 
+    # max in minimax
     def ai_max(self, game, depth=0, won_depth=None):
         # pick worst option for min. i.e. least heur.
         if depth >= self.maxLevels:
@@ -407,6 +404,7 @@ class AIPlayer:
 
             return maximum, index
 
+    # mini in minimax
     def ai_mini(self, game, depth, won_depth=None):
         if depth >= self.maxLevels:
             mul = 1

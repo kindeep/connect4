@@ -6,6 +6,29 @@ import pygame
 from game import *
 
 
+# this file mostly just had display stuff. Actual heuristic, minmax algo and game logic is in game.py
+
+# Just stores rgb values for colours.
+class Colors:
+    victory_tile_highlight = 0, 255, 255
+    yellow = 255, 200, 0
+    red = 200, 0, 0
+    blue = 0, 0, 255
+    black = 0, 0, 0
+    white = 255, 255, 255
+    info = 200, 200, 200
+    col_highlight = 100, 100, 230
+
+    @staticmethod
+    def get_tile_color(tile: Tile):
+        if tile == Tile.player2:
+            return Colors.red
+        if tile == Tile.player1:
+            return Colors.yellow
+        else:
+            return Colors.white
+
+
 class Display:
     info_padding: int = 0.01
     text_size = 30
@@ -104,7 +127,6 @@ class Display:
                 pygame.draw.ellipse(self.screen,
                                     Colors.get_tile_color(self.game.grid.get(x, y))
                                     , self.get_box(x, y))
-
 
     def faster_draw(self):
         self.screen.fill(Colors.blue)
@@ -231,7 +253,6 @@ def with_ai(ai_player, ply=4):
                     ai_movee = True
                 display.faster_draw()
                 pygame.display.flip()
-
 
 
 def normal_mode():
