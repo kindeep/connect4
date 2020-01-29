@@ -1,3 +1,6 @@
 # Connect 4
 Connect 4 written with pygame, with a
 mini-max AI.
+
+Playthrough with 3 ply: -
+![Demo gif](https://i.imgur.com/cG7AVBZ.gif)
